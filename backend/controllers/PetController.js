@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const getToken = require("../helpers/get-tokens");
 const getUserByToken = require("../helpers/get-user-by-token");
 const { countDocuments } = require("../models/User");
+const getUserToken = require("../helpers/get-user-by-token");
 
 module.exports = class PetController {
   static async create(req, res) {
@@ -67,6 +68,30 @@ module.exports = class PetController {
     try {
       const pets = await Pet.find().sort("-createdAt");
       res.status(200).json({ pets });
+    } catch (error) {
+      res.status(500).json({ massage: error });
+    }
+  }
+  static async getAllUsersByPets(req, res) {
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    try {
+      const pets = await Pet.find({ "user._id": user._id }).sort("-createdAt");
+      res.status(200).json({ pets });
+    } catch (error) {
+      res.status(500).json({ message: error });
+    }
+  }
+  static async getAllUserAdoptions(req, res) {
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    try {
+      const pets = await Pet.find({ "adopter._id": adopter._id }).sort(
+        "-createdAt",
+      );
+      res.statu(200).json({ pets });
     } catch (error) {
       res.status(500).json({ massage: error });
     }
