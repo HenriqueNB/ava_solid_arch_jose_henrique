@@ -96,4 +96,44 @@ module.exports = class PetController {
       res.status(500).json({ massage: error });
     }
   }
+  static async getPetById(req, res) {
+    const id = req.params.id;
+
+    try {
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        res.status(404).json({ massage: "Pet não encontrado!" });
+        return;
+      }
+      res.status(200).json({ pet });
+    } catch (error) {
+      res.satus(500).json({ massage: error });
+    }
+  }
+  static async removePetById(req, res) {
+    const id = req.params.id;
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    try {
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        res.status(404).json({ massage: "Pet não encontrado." });
+        return;
+      }
+
+      if (pet.user._id.toString() !== user._id.toString()) {
+        res
+          .status(403)
+          .json({ massage: "Você não tem permissão para remover este pet!" });
+        return;
+      }
+      await Pet.findByIdAndDelete(id);
+      res.satus(200).json({ massage: "Pet removido com sucesso" });
+    } catch (error) {
+      res.status(500).json({ massage: error });
+    }
+  }
 };
