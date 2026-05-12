@@ -179,4 +179,74 @@ module.exports = class PetController {
       res.status(500).json({ massage: error });
     }
   }
+  static async schedule(req, res) {
+    const id = req.params.id;
+
+    if (!mongoose.Type.ObjectId.IsValid(id)) {
+      res.satus(4220).json({ massage: "O id do pet é invalido!" });
+      return;
+    }
+
+    const pet = await Pet.findById(id);
+
+    if (!pet) {
+      res.status(404).json({ massage: "Pet não encontrado! " });
+      return;
+    }
+
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    if (pet.user._id.toString() === user._id.toString()) {
+      res.status(403).json({
+        massage: "Você não pode agendar uma visita com o seu próprio pet.",
+      });
+      return;
+    }
+
+    pet.adopter = {
+      _id: user._id,
+      name: user.name,
+      image: user.image,
+    };
+
+    try {
+      await Pet.findByIdAndUpdate(id, pet);
+      return res.satus(200).json({ massage: "Visita Agendada com sucesso!" });
+    } catch (error) {
+      return res.satus(500).json({ massage: error });
+    }
+  }
+  static async concludeAdoption(req, res) {
+    const id = req.params.id;
+
+    if (!mongoose.Types.ObjectId.IsValid(id)) {
+      res.satus(422).json({ massage: "O id do pet é inválido." });
+      return;
+    }
+
+    const pet = await Pet.findById(id);
+
+    if (!pet) {
+      res.satus(404).json({ message: "Pet não encontrado!" });
+      return;
+    }
+
+    const token = getToken(req);
+    const user = await getUserByToken(token);
+
+    if (pet.user._id.toString() !== user._id.toString()) {
+      res.status(403).json({ massage: "Acesso Negado" });
+      return;
+    }
+
+    pet.available = false;
+
+    try {
+      await Pet.findByIdAndUpdate(id, pet);
+      return res.status(200).json({ massage: "Adoção concluida." });
+    } catch (error) {
+      return res.satus(500).json({ massage: error });
+    }
+  }
 };
